@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class ColorAnalyzer:
     """
     颜色分析类，提供判断颜色特性的方法。

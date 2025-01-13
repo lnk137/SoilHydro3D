@@ -2,7 +2,9 @@ import pyvista as pv
 from utils.ImageProcessor import ImageProcessor
 from utils.ColorAnalyzer import ColorAnalyzer
 from tqdm import tqdm
+import logging
 
+logger = logging.getLogger(__name__)
 
 class ModelBuilder:
     """

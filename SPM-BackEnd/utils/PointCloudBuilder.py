@@ -3,8 +3,10 @@ import numpy as np
 from utils.ImageProcessor import ImageProcessor
 from utils.ColorAnalyzer import ColorAnalyzer
 from tqdm import tqdm
+from collections import defaultdict
+import logging
 
-
+logger = logging.getLogger(__name__)
 class PointCloudBuilder:
     """
     点云生成类，用于根据图像生成三维点云。
@@ -17,10 +19,11 @@ class PointCloudBuilder:
         :param layer_thickness: 每层的厚度，控制图像层的堆叠间隔。
         :type layer_thickness: int
         """
-        self.layer_thickness = layer_thickness
-        self.points = []  # 存储所有点的 (x, y, z)
+        self.layer_thickness = layer_thickness  # 每层的厚度
+        self.points = []  # 存储所有点的 (x, y, z) 坐标
         self.colors = []  # 存储所有点的颜色 (r, g, b)
-        self.plotter = pv.Plotter()
+        self.plotter = pv.Plotter()  # 负责点云的可视化
+        self.volume_data = {}  # 存储每种颜色对应的体积数据
 
     def generate_layer(self, current_z, image_path):
         """
@@ -36,10 +39,13 @@ class PointCloudBuilder:
         # 定义 3x3x3 范围内的偏移
         offsets = [-0.3, 0.0, 0.3]
 
-        for pixel in tqdm(pixels, desc="处理像素", unit="个", position=1, leave=False):
+        # for pixel in tqdm(pixels, desc="处理像素", unit="个", position=1, leave=False):
+        for pixel in pixels:
             color = pixel[5]  # Hex颜色值
             if ColorAnalyzer.is_nearly_white(color):
                 continue  # 跳过接近白色的像素
+            elif ColorAnalyzer.is_color_in_range(color, "#0B00FB", 50):
+                continue
 
             # 提取 RGB 值
             r = pixel[2]
@@ -61,7 +67,7 @@ class PointCloudBuilder:
         :type image_paths: List[str]
         """
         for index, image_path in tqdm(
-            enumerate(image_paths), desc="生成点云层", unit="层", total=len(image_paths), position=0
+                enumerate(image_paths), desc="生成点云层", unit="层", total=len(image_paths), position=0
         ):
             # 计算当前层的高度坐标
             current_z = index * self.layer_thickness
@@ -69,6 +75,27 @@ class PointCloudBuilder:
             # 按照层厚度生成点云
             for i in range(current_z, current_z + self.layer_thickness):
                 self.generate_layer(current_z=i, image_path=image_path)
+
+    def calculate_volume(self):
+        """
+        统计相同颜色的点数，并计算每种颜色的体积。
+
+        每 27 个点视为一个 1x1x1 的立方米体积。
+        """
+        # 统计每种颜色对应的点数
+        color_point_count = defaultdict(int)
+
+        for color in self.colors:
+            color_point_count[color] += 1
+
+        # 计算每种颜色的体积
+        self.volume_data = {color: count / 27 for color, count in color_point_count.items()}
+
+        # 打印结果
+        for color, volume in self.volume_data.items():
+            logger.info(f"颜色 {color} 的体积为 {volume:.2f} 立方米。")
+
+        return self.volume_data
 
     def generate_point_cloud(self):
         """

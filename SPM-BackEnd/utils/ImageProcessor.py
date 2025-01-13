@@ -1,7 +1,10 @@
 from PIL import Image
+import numpy as np
 import cv2
+import os
+import logging
 
-
+logger = logging.getLogger(__name__)
 class ImageProcessor:
 
     @staticmethod
@@ -44,7 +47,7 @@ class ImageProcessor:
         return pixel_data
 
     @staticmethod
-    def replace_top_two_rows(image_paths, hex_color):
+    def replace_top_two_rows(image_paths, hex_color='#0B00FB'):
         """
         将图片路径列表中每张图片的最上面两行像素替换成指定的 16 进制颜色值，并直接覆盖原图片。
 
@@ -76,7 +79,71 @@ class ImageProcessor:
 
                 # 保存修改后的图片（覆盖原图片）
                 image.save(image_path)
-                print(f"已修改并覆盖图片: {image_path}")
 
             except Exception as e:
-                print(f"处理图片 {image_path} 时出错: {e}")
+                logger.info(f"Error来自replace_top_two_rows: {e}")
+
+    @staticmethod
+    def cluster_images_to_colors(input_folder, hex_colors= ["#9CFF9B", "#0FFDFE", "#0B00FB", "#FFFFFF"]):
+        """
+        将文件夹中的图片聚类为指定的目标颜色，并直接替换原始图片。
+
+        :param input_folder: 包含待处理图片的文件夹路径。
+        :type input_folder: str
+        :param hex_colors: 目标颜色的16进制列表。
+        :type hex_colors: list[str]
+        """
+        # 将16进制颜色转换为RGB
+        def hex_to_rgb(hex_color):
+            hex_color = hex_color.lstrip("#")
+            return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+        # 转换所有目标颜色为RGB
+        target_colors = {hex_color: hex_to_rgb(hex_color) for hex_color in hex_colors}
+
+        def closest_color(color, target_colors):
+            """
+            找到与给定颜色最接近的目标颜色。
+
+            :param color: 输入的 RGB 颜色 (r, g, b)。
+            :param target_colors: 目标颜色字典，键为颜色名，值为 RGB 值。
+            :return: 最接近的目标颜色名。
+            """
+            color = np.array(color)
+            distances = {key: np.linalg.norm(color - np.array(value)) for key, value in target_colors.items()}
+            return min(distances, key=distances.get)
+
+        def process_image(image_path, target_colors):
+            """
+            将图像中的像素聚类到指定的目标颜色，并替换原始图片。
+
+            :param image_path: 输入图像路径。
+            :param target_colors: 目标颜色字典，键为颜色名，值为 RGB 值。
+            """
+            # 打开图像并转换为 RGB 模式
+            image = Image.open(image_path).convert("RGB")
+            pixels = np.array(image)
+            height, width, _ = pixels.shape
+
+            # 将每个像素点聚类到目标颜色
+            clustered_pixels = np.zeros_like(pixels)
+            for i in range(height):
+                for j in range(width):
+                    clustered_pixels[i, j] = target_colors[closest_color(pixels[i, j], target_colors)]
+
+            # 替换原图
+            clustered_image = Image.fromarray(np.uint8(clustered_pixels))
+            clustered_image.save(image_path)
+
+        # 遍历文件夹中的所有图片
+        for filename in os.listdir(input_folder):
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
+                image_path = os.path.join(input_folder, filename)
+                process_image(image_path, target_colors)
+
+if __name__ == "__main__":
+    # 目标颜色的16进制列表
+    HEX_COLORS = ["#9CFF9B", "#0FFDFE", "#0B00FB", "#FFFFFF"]
+
+    input_folder = "../img/Four-Color Cluster Images (Original Colors)"  # 输入文件夹路径
+

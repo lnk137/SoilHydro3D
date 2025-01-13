@@ -1,8 +1,26 @@
 from utils.FileManager import FileManager
 from utils.PointCloudBuilder import PointCloudBuilder
 from utils.ImageProcessor import ImageProcessor
+import logging
+import os
 
+# 确保日志目录存在
 
+log_dir = "log"
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,  # 设置日志级别
+    format="[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s",
+    handlers=[
+        logging.FileHandler("log/app.log", encoding="utf-8"),  # 将日志输出到文件，设置编码为 utf-8
+        logging.StreamHandler()          # 同时输出到控制台
+    ]
+)
+# 获取日志记录器
+logger = logging.getLogger(__name__)
 def initialize_objects(folder_path, layer_thickness):
     """
     初始化文件管理器、点云生成器，以及处理图片所需的路径和对象。
@@ -53,6 +71,8 @@ def run_point_cloud_pipeline(file_manager, builder, image_paths, temp_folder, ou
 
         # 生成点云对象
         point_cloud = builder.generate_point_cloud()
+        # 计算体积
+        volumes = builder.calculate_volume()
 
         # 保存点云为文件
         file_manager.save_point_cloud(point_cloud, file_name=output_path)
@@ -60,17 +80,18 @@ def run_point_cloud_pipeline(file_manager, builder, image_paths, temp_folder, ou
     finally:
         # 删除 temp 文件夹
         file_manager.delete_temp_folder(temp_folder)
-        print(f"已删除临时文件夹: {temp_folder}")
+        logger.info("temp 文件夹已删除。")
 
 if __name__ == "__main__":
     # 文件夹路径
-    folder_path = r"img/Four-Color Cluster Images (Adjusted Colors)/100"
+    folder_path = r"img/Test/100"
 
     # 创建必要对象
     file_manager, builder, temp_folder, image_paths = initialize_objects(folder_path, layer_thickness=5)
 
+    ImageProcessor.cluster_images_to_colors(temp_folder)
     # 处理图片（替换最上面两行像素颜色）
-    ImageProcessor.replace_top_two_rows(image_paths, '#0B00FB')
+    ImageProcessor.replace_top_two_rows(image_paths)
 
     # 构建点云并显示
     run_point_cloud_pipeline(file_manager, builder, image_paths, temp_folder, output_path="model/point_cloud.vtk")
