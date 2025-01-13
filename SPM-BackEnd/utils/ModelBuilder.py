@@ -11,12 +11,23 @@ class ModelBuilder:
 
     def __init__(self, side_length=1, layer_thickness=3):
         """
-        初始化建模类。
-
-        :param side_length: 每个立方体的边长。
+        :param side_length: 每个立方体的边长，控制生成模型的分辨率和体素大小，默认为 1。
         :type side_length: int
-        :param layer_thickness: 每层的厚度。
+
+        :param layer_thickness: 每层的厚度，控制图像层的堆叠间隔，默认为 3。
         :type layer_thickness: int
+
+        :param side_length: 每个立方体的边长，决定体素的大小。
+        :type side_length: int
+
+        :param layer_thickness: 每层的厚度，决定相邻图像在模型中的高度间隔。
+        :type layer_thickness: int
+
+        :param plotter: PyVista 的渲染器对象，用于渲染三维模型。
+        :type plotter: pv.Plotter
+
+        :param color_cubes: 存储每种颜色对应的合并网格的字典,键为颜色值 (Hex 字符串)，值为合并后的网格对象。
+        :type color_cubes: Dict[str, pv.PolyData]
         """
         self.side_length = side_length
         self.layer_thickness = layer_thickness
@@ -34,6 +45,9 @@ class ModelBuilder:
         """
         pixels = ImageProcessor.extract_pixel_colors(image_path)
 
+        # 用于延迟合并的临时存储字典
+        color_mesh_list = {}
+
         for pixel in tqdm(pixels, desc="像素分组", unit="个", position=1, leave=False):
             color = pixel[5]  # Hex颜色值
             if ColorAnalyzer.is_nearly_white(color):
@@ -47,11 +61,19 @@ class ModelBuilder:
                 z_length=self.layer_thickness,
             )
 
-            # 合并同颜色的立方体
-            if color not in self.color_cubes:
-                self.color_cubes[color] = cube
+            # 延迟合并：将立方体存储到对应颜色的列表中
+            if color not in color_mesh_list:
+                color_mesh_list[color] = [cube]
             else:
-                self.color_cubes[color] = self.color_cubes[color].merge(cube)
+                color_mesh_list[color].append(cube)
+
+        # 批量合并每种颜色的立方体网格
+        for color, cubes in color_mesh_list.items():
+            combined_mesh = pv.MultiBlock(cubes).combine()  # 合并多个网格
+            if color not in self.color_cubes:
+                self.color_cubes[color] = combined_mesh
+            else:
+                self.color_cubes[color] = self.color_cubes[color].merge(combined_mesh)
 
     def build_model(self, image_paths):
         """

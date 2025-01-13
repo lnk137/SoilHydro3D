@@ -42,3 +42,41 @@ class ImageProcessor:
                 pixel_data.append((x, y, r, g, b, hex_color))
 
         return pixel_data
+
+    @staticmethod
+    def replace_top_two_rows(image_paths, hex_color):
+        """
+        将图片路径列表中每张图片的最上面两行像素替换成指定的 16 进制颜色值，并直接覆盖原图片。
+
+        :param image_paths: 图片路径列表。
+        :type image_paths: List[str]
+        :param hex_color: 指定的 16 进制颜色值（如 "#FF5733"）。
+        :type hex_color: str
+        """
+        # 将 16 进制颜色转换为 RGB
+        r = int(hex_color[1:3], 16)
+        g = int(hex_color[3:5], 16)
+        b = int(hex_color[5:7], 16)
+        new_color = (r, g, b)
+
+        for image_path in image_paths:
+            try:
+                # 打开图片
+                image = Image.open(image_path)
+                image = image.convert("RGB")  # 确保图片是 RGB 模式
+
+                # 获取图片宽度和高度
+                width, height = image.size
+
+                # 修改最上面两行像素
+                pixels = image.load()
+                for y in range(2):  # 遍历前两行
+                    for x in range(width):
+                        pixels[x, y] = new_color
+
+                # 保存修改后的图片（覆盖原图片）
+                image.save(image_path)
+                print(f"已修改并覆盖图片: {image_path}")
+
+            except Exception as e:
+                print(f"处理图片 {image_path} 时出错: {e}")
