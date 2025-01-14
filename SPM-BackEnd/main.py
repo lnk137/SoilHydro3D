@@ -1,10 +1,16 @@
-from utils.FileManager import FileManager
-from utils.PointCloudBuilder import PointCloudBuilder
-from utils.ImageProcessor import ImageProcessor
-from utils.PyvistaShow import PyvistaShow
-from utils.CubeBuilder import CubeBuilder
+import webview
+import threading
+from flask import Flask
+from flask_cors import CORS
+
+from blueprints.creat_model_bp import creat_model_bp
+from blueprints.file_bp import file_bp
+from blueprints.top_bp import top_bp
+
+
 import logging
 import os
+
 
 # 确保日志目录存在
 
@@ -17,74 +23,32 @@ logging.basicConfig(
     level=logging.INFO,  # 设置日志级别
     format="[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s",
     handlers=[
-        logging.FileHandler("log/app.log", encoding="utf-8"),  # 将日志输出到文件，设置编码为 utf-8
-        logging.StreamHandler()          # 同时输出到控制台
+        logging.FileHandler("./log/app.log", encoding="utf-8"),  # 将日志输出到文件，设置编码为 utf-8
+        logging.StreamHandler()      # 同时输出到控制台
     ]
 )
-# 获取日志记录器
 logger = logging.getLogger(__name__)
+app = Flask(__name__)
 
+# 配置跨域请求
+CORS(app)
 
-# 预处理
-def preprocess_images(folder_path):
+# 注册蓝图
+app.register_blueprint(creat_model_bp, url_prefix="/creat")
+app.register_blueprint(file_bp, url_prefix="/file")
+app.register_blueprint(top_bp, url_prefix="/top")
 
-    # 创建 temp 文件夹并复制图片
-    temp_folder = FileManager.copy_images_to_temp(folder_path)
+def run_flask():
+    """ 运行 Flask API 服务器 """
+    logger.info("服务器已启动")
+    app.run(host="0.0.0.0", port=5464, debug=True, use_reloader=False)
 
-    # 加载图片路径列表
-    image_paths = FileManager.load_image_paths_from_folder(temp_folder)
-
-    # 聚类图片颜色
-    ImageProcessor.cluster_images_to_colors(temp_folder)
-
-    # 处理图片（替换最上面两行像素颜色）
-    ImageProcessor.replace_top_two_rows(image_paths)
-
-    return image_paths, temp_folder
-
-def creat_point_cloud(image_paths, temp_folder, output_path,layer_thickness,offset=0.3):
-    """
-    运行点云构建、显示及保存的完整流程。
-    """
-    try:
-
-        # 初始化点云生成器
-        builder = PointCloudBuilder(layer_thickness,offset)
-        # 构建点云
-        point_cloud=builder.build_point_cloud(image_paths)
-
-        # 保存点云为文件
-        FileManager.save_point_cloud_vtp(point_cloud, file_name=output_path)
-
-    finally:
-        # 删除 temp 文件夹
-        FileManager.delete_temp_folder(temp_folder)
-        logger.info("temp 文件夹已删除。")
-
-def creat_cube(image_paths, temp_folder, output_path,layer_thickness=3):
-    """
-    运行立方体建模、显示及保存的完整流程。
-    """
-    try:
-        builder=CubeBuilder(side_length=1, layer_thickness=layer_thickness)
-        # 构建三维模型
-        cube_model=builder.build_model(image_paths)
-        # 保存为vtk
-        FileManager.save_as_vtk(cube_model, output_path)
-
-    finally:
-        # 删除 temp 文件夹
-        FileManager.delete_temp_folder(temp_folder)
-        logger.info("temp 文件夹已删除。")
 
 if __name__ == "__main__":
-    # 文件夹路径
-    folder_path = r"img/Test/100cut"
-    output_path="model/cube.vtk"
-    image_paths, temp_folder=preprocess_images(folder_path)
+    # 创建并启动 Flask 线程
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
+    flask_thread.start()
 
-
-    # 构建点云并显示
-    creat_cube(image_paths, temp_folder, output_path=output_path)
-    pyvista_show = PyvistaShow()
-    pyvista_show.show_mesh_vtk(output_path)
+    # 启动 WebView 浏览器，访问前端页面
+    webview.create_window("SoilHydro3D", "http://localhost:5000/viewer")
+    webview.start()

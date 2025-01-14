@@ -27,7 +27,7 @@ class FileManager:
         return image_paths
 
     @staticmethod
-    def save_point_cloud_vtp(point_cloud, file_name):
+    def save_point_cloud_vtp(point_cloud, output_path):
         """
         保存点云为 XML 格式的 VTP 文件。
 
@@ -37,9 +37,9 @@ class FileManager:
         :type file_name: str
         """
         try:
-
-            point_cloud.save(file_name, binary=False)  # binary=False 表示保存为 XML 格式
-            logger.info(f"点云已保存为 VTP 格式: {file_name}")
+            output_path=FileManager.change_file_extension(output_path, "vtp")
+            point_cloud.save(output_path, binary=False)  # binary=False 表示保存为 XML 格式
+            logger.info(f"点云已保存为 VTP 格式: {output_path}")
         except Exception as e:
             logger.info(f"保存 VTP 文件时出错: {e}")
 
@@ -50,9 +50,8 @@ class FileManager:
         :param mesh: PyVista 网格对象，必须包含 'RGB' 数据
         :param output_path: 输出 VTK 文件的路径（应以 .vtk 结尾）
         """
-        # 检查输出路径是否正确
-        if not output_path.lower().endswith('.vtk'):
-            raise ValueError("输出路径必须以 .vtk 结尾")
+
+        output_path=FileManager.change_file_extension(output_path, "vtk")
 
         # 检查是否包含 RGB 数据
         if 'RGB' not in mesh.point_data:
@@ -63,7 +62,7 @@ class FileManager:
 
         # 保存为 VTK 文件
         mesh.save(output_path)
-        print(f"网格已成功保存为 {output_path}")
+        logger.info(f"网格已成功保存为 {output_path}")
 
     @staticmethod
     def save_colored_obj(mesh, output_path):
@@ -206,3 +205,15 @@ class FileManager:
 
         except Exception as e:
             logger.info(f"删除 temp 文件夹时出错: {e}")
+
+    @staticmethod
+    def change_file_extension(output_path, new_extension):
+        """
+        修改文件后缀为指定格式
+        :param output_path: 原始文件路径 (如 "model/cube.vtk")
+        :param new_extension: 目标格式 (如 "obj", "stl", "ply")
+        :return: 修改后的新文件路径
+        """
+        base_name, _ = os.path.splitext(output_path)  # 获取不带后缀的文件名
+        new_file_path = f"{base_name}.{new_extension}"  # 拼接新后缀
+        return new_file_path
