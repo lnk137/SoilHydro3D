@@ -13,7 +13,7 @@ class PointCloudBuilder:
     点云生成类，用于根据图像生成三维点云。
     """
 
-    def __init__(self, layer_thickness):
+    def __init__(self, layer_thickness,offset=0.3):
         """
         初始化点云生成类。
 
@@ -21,12 +21,13 @@ class PointCloudBuilder:
         :type layer_thickness: int
         """
         self.layer_thickness = layer_thickness  # 每层的厚度
+        self.offset=offset
         self.points = []  # 存储所有点的 (x, y, z) 坐标
         self.colors = []  # 存储所有点的颜色 (r, g, b)
         self.plotter = pv.Plotter()  # 负责点云的可视化
         self.volume_data = {}  # 存储每种颜色对应的体积数据
 
-    def generate_layer(self, current_z, image_path,target=None):
+    def generate_layer(self, current_z, image_path, target=None):
         """
         根据单张图片生成点云，增加点的密度，在 3x3x3 范围内生成。
 
@@ -38,9 +39,8 @@ class PointCloudBuilder:
         pixels = ImageProcessor.extract_pixel_colors(image_path)
 
         # 定义 3x3x3 范围内的偏移
-        offsets = [-0.3, 0.0, 0.3]
+        offsets = [-self.offset, 0.0, self.offset]
 
-        # for pixel in tqdm(pixels, desc="处理像素", unit="个", position=1, leave=False):
         for pixel in pixels:
             color = pixel[5]  # Hex颜色值
             if ColorAnalyzer.is_nearly_white(color):
@@ -68,11 +68,14 @@ class PointCloudBuilder:
 
     def build_point_cloud(self, image_paths):
         """
-        根据多张图片生成三维点云。
+        根据多张图片生成三维点云并返回。
 
         :param image_paths: 图像路径列表。
         :type image_paths: List[str]
+        :return: 返回生成的点云数据对象。
+        :rtype: pv.PolyData
         """
+        # 生成点云
         for index, image_path in tqdm(
                 enumerate(image_paths), desc="生成点云层", unit="层", total=len(image_paths), position=0
         ):
@@ -80,8 +83,25 @@ class PointCloudBuilder:
             current_z = index * self.layer_thickness
 
             # 按照层厚度生成点云
-            for i in range(current_z, current_z + self.layer_thickness):
-                self.generate_layer(current_z=i, image_path=image_path)
+            self.generate_layer(current_z=current_z, image_path=image_path)
+
+        # 转换点和颜色为 NumPy 数组
+        points_array = np.array(self.points)
+        colors_array = np.array(self.colors)
+
+        # 确保颜色为浮点数并归一化
+        colors_array = np.clip(colors_array / 255.0, 0, 1)
+
+        # 创建点云数据对象
+        point_cloud = pv.PolyData(points_array)
+        point_cloud["RGB"] = colors_array  # 添加 RGB 属性
+
+        # 验证属性
+        if "RGB" not in point_cloud.point_data.keys():
+            raise ValueError("点云对象中未找到 RGB 属性，请检查颜色数据处理流程。")
+
+        self.calculate_volume()
+        return point_cloud
 
     def calculate_volume(self):
         """
@@ -104,49 +124,4 @@ class PointCloudBuilder:
 
         return self.volume_data
 
-    def generate_point_cloud(self):
-        """
-        生成并返回点云对象。
 
-        :return: PyVista 的点云数据对象。
-        :rtype: pv.PolyData
-        """
-        # 转换点和颜色为 NumPy 数组
-        points_array = np.array(self.points)
-        colors_array = np.array(self.colors)
-
-        # 确保颜色为浮点数并归一化
-        colors_array = np.clip(colors_array / 255.0, 0, 1)
-
-        # 创建点云数据对象
-        point_cloud = pv.PolyData(points_array)
-        point_cloud["RGB"] = colors_array  # 添加 RGB 属性
-
-        # 验证属性
-        if "RGB" not in point_cloud.point_data.keys():
-            raise ValueError("点云对象中未找到 RGB 属性，请检查颜色数据处理流程。")
-
-        # plotter = pv.Plotter(off_screen=True)  # 使用离屏渲染
-        # plotter.add_mesh(point_cloud, scalars="RGB", rgb=True)
-        # plotter.export_html("m.html")  # 保存为 HTML
-        # plotter.close()  # 关闭 plotter 对象
-        # print(f"交互式点云已保存为 HTML 文件")
-
-        return point_cloud
-
-    def show_point_cloud(self):
-        """
-        显示生成的点云。
-        """
-        # 获取点云数据
-        point_cloud = self.generate_point_cloud()
-
-        # 可视化点云
-        self.plotter.add_mesh(
-            point_cloud,
-            scalars="RGB",          # 使用 RGB 属性进行渲染
-            rgb=True,               # 指定颜色为 RGB 格式
-            point_size=5,           # 设置点大小
-            render_points_as_spheres=True,
-        )
-        self.plotter.show()

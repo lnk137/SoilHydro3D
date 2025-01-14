@@ -39,7 +39,7 @@ class CubeBuilder:
 
         return cleaned
 
-    def generate_surface(self, current_z, image_path):
+    def generate_surface(self, current_z, image_path,target=None):
         """
         根据单张图片生成三维表面，包含优化处理。
         :param current_z: 当前层的高度。
@@ -54,6 +54,15 @@ class CubeBuilder:
         for x, y, r, g, b, color in pixels:
             if ColorAnalyzer.is_nearly_white(color):
                 continue  # 跳过接近白色的像素
+            if target is not None:
+                if target == "preferential_flow":
+                    if ColorAnalyzer.is_color_in_range(color, "#0B00FB", 50):
+                        continue
+                if target == "matrix_flow":
+                    if ColorAnalyzer.is_color_in_range(color, "#9CFF9B", 50):
+                        continue
+                    elif ColorAnalyzer.is_color_in_range(color, "#0FFDFE", 50):
+                        continue
 
             # 直接将立方体存入字典
             color_mesh_list[color].append(
@@ -67,11 +76,11 @@ class CubeBuilder:
 
         # 批量合并并优化
         for color, cubes in color_mesh_list.items():
-            # ✅ 合并立方体并优化
+            # 合并立方体并优化
             combined_mesh = pv.MultiBlock(cubes).combine()
             optimized_mesh = self.optimize_mesh(combined_mesh)
 
-            # ✅ 直接更新颜色字典（更简洁）
+            # 直接更新颜色字典（更简洁）
             self.color_cubes[color] = (
                 optimized_mesh if color not in self.color_cubes
                 else self.color_cubes[color].merge(optimized_mesh)
@@ -89,16 +98,21 @@ class CubeBuilder:
             current_z = index * self.layer_thickness
             self.generate_surface(current_z=current_z, image_path=image_path)
 
-        # ✅ 合并所有颜色立方体并保留颜色
+        # 合并所有颜色立方体并保留颜色
         all_meshes = []
         all_colors = []
 
         for color, mesh in self.color_cubes.items():
-            # 将颜色转换为RGB数组
+            # 将颜色转换为 RGB 数组并归一化
             rgba_color = np.array([int(color[i:i + 2], 16) for i in (1, 3, 5)] + [255]) / 255.0
+
+            # 直接截取小数点后四位（不四舍五入）
+            rgba_color = np.floor(rgba_color * 10000) / 10000
+
+            # 生成与顶点数量匹配的 RGBA 数组
             rgba_array = np.tile(rgba_color, (mesh.n_points, 1))
 
-            # ✅ 将颜色数据附加到 mesh 的 point_data
+            # 将颜色数据附加到 mesh 的 point_data
             mesh.point_data['RGB'] = rgba_array
             mesh.point_data.active_scalars_name = 'RGB'
 
@@ -106,8 +120,9 @@ class CubeBuilder:
             all_meshes.append(mesh)
             all_colors.append(rgba_color)
 
-
         combined_mesh = pv.MultiBlock(all_meshes).combine()
+
+
         self.plotter.add_mesh(combined_mesh, scalars="RGB", rgb=True)
 
         return combined_mesh
@@ -117,3 +132,4 @@ class CubeBuilder:
         显示生成的三维模型。
         """
         self.plotter.show()
+

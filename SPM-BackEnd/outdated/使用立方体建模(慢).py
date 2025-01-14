@@ -47,26 +47,17 @@ def initialize_objects(folder_path, layer_thickness):
     return file_manager, builder, temp_folder, image_paths
 
 
-def run_point_cloud_pipeline(file_manager, builder, image_paths, temp_folder, output_path):
-    """
-    运行点云构建、显示及保存的完整流程。
+def run_pipeline(file_manager, builder, image_paths, temp_folder, output_path):
 
-    :param file_manager: 文件管理器对象。
-    :type file_manager: FileManager
-    :param builder: 点云生成器对象。
-    :type builder: PointCloudBuilder
-    :param image_paths: 图片路径列表。
-    :type image_paths: List[str]
-    :param temp_folder: temp 文件夹路径。
-    :type temp_folder: str
-    :param output_path: 点云文件的保存路径。
-    :type output_path: str
-    """
     try:
         # 构建三维模型
         combined_mesh=builder.build_model(image_paths)
         # 显示模型
         builder.show_model()
+
+
+        # 保存为 OBJ
+        CubeBuilder.save_colored_obj(combined_mesh, "../model/output.obj")  # 会同时生成 output.obj 和 output.mtl
 
     finally:
         # 删除 temp 文件夹
@@ -85,4 +76,4 @@ if __name__ == "__main__":
     ImageProcessor.replace_top_two_rows(image_paths)
 
     # 构建点云并显示
-    run_point_cloud_pipeline(file_manager, builder, image_paths, temp_folder, output_path="../model/cube.vtp")
+    run_pipeline(file_manager, builder, image_paths, temp_folder, output_path="../model/cube.vtu")
