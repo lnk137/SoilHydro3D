@@ -6,6 +6,7 @@ from tqdm import tqdm
 from collections import defaultdict
 import logging
 
+
 logger = logging.getLogger(__name__)
 class PointCloudBuilder:
     """
@@ -25,7 +26,7 @@ class PointCloudBuilder:
         self.plotter = pv.Plotter()  # 负责点云的可视化
         self.volume_data = {}  # 存储每种颜色对应的体积数据
 
-    def generate_layer(self, current_z, image_path):
+    def generate_layer(self, current_z, image_path,target=None):
         """
         根据单张图片生成点云，增加点的密度，在 3x3x3 范围内生成。
 
@@ -44,9 +45,15 @@ class PointCloudBuilder:
             color = pixel[5]  # Hex颜色值
             if ColorAnalyzer.is_nearly_white(color):
                 continue  # 跳过接近白色的像素
-            elif ColorAnalyzer.is_color_in_range(color, "#0B00FB", 50):
-                continue
-
+            if target is not None:
+                if target == "preferential_flow":
+                    if ColorAnalyzer.is_color_in_range(color, "#0B00FB", 50):
+                        continue
+                if target == "matrix_flow":
+                    if ColorAnalyzer.is_color_in_range(color, "#9CFF9B", 50):
+                        continue
+                    elif ColorAnalyzer.is_color_in_range(color, "#0FFDFE", 50):
+                        continue
             # 提取 RGB 值
             r = pixel[2]
             g = pixel[3]
@@ -118,6 +125,13 @@ class PointCloudBuilder:
         # 验证属性
         if "RGB" not in point_cloud.point_data.keys():
             raise ValueError("点云对象中未找到 RGB 属性，请检查颜色数据处理流程。")
+
+        # plotter = pv.Plotter(off_screen=True)  # 使用离屏渲染
+        # plotter.add_mesh(point_cloud, scalars="RGB", rgb=True)
+        # plotter.export_html("m.html")  # 保存为 HTML
+        # plotter.close()  # 关闭 plotter 对象
+        # print(f"交互式点云已保存为 HTML 文件")
+
         return point_cloud
 
     def show_point_cloud(self):

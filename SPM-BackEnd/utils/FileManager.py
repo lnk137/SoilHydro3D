@@ -27,20 +27,21 @@ class FileManager:
         return image_paths
 
     @staticmethod
-    def save_point_cloud(point_cloud, file_name):
+    def save_point_cloud_vtp(point_cloud, file_name):
         """
-        保存点云文件。
+        保存点云为 XML 格式的 VTP 文件。
 
         :param point_cloud: PyVista 的点云数据对象。
         :type point_cloud: pv.PolyData
-        :param file_name: 保存的文件名。
+        :param file_name: 保存的文件名 (.vtp)
         :type file_name: str
         """
         try:
-            point_cloud.save(file_name)
-            logger.info(f"点云已保存: {file_name}")
+
+            point_cloud.save(file_name, binary=False)  # binary=False 表示保存为 XML 格式
+            logger.info(f"点云已保存为 VTP 格式: {file_name}")
         except Exception as e:
-            logger.info(f"保存点云时出错: {e}")
+            logger.info(f"保存 VTP 文件时出错: {e}")
 
     @staticmethod
     def copy_images_to_temp(source_folder):

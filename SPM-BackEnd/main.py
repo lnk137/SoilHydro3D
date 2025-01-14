@@ -75,7 +75,7 @@ def run_point_cloud_pipeline(file_manager, builder, image_paths, temp_folder, ou
         volumes = builder.calculate_volume()
 
         # 保存点云为文件
-        file_manager.save_point_cloud(point_cloud, file_name=output_path)
+        file_manager.save_point_cloud_vtp(point_cloud, file_name=output_path)
 
     finally:
         # 删除 temp 文件夹
