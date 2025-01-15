@@ -24,6 +24,7 @@ class CubeBuilder:
         self.plotter = pv.Plotter()
         self.target=target
         self.color_cubes = {}
+        self.volume_data = {}
 
     def optimize_mesh(self, mesh):
         """
@@ -74,7 +75,7 @@ class CubeBuilder:
                     z_length=self.layer_thickness
                 )
             )
-
+            self.volume_data[color] = self.volume_data.get(color, 0) + self.layer_thickness
         # 批量合并并优化
         for color, cubes in color_mesh_list.items():
             # 合并立方体并优化
@@ -127,6 +128,7 @@ class CubeBuilder:
 
         self.plotter.add_mesh(combined_mesh, scalars="RGB", rgb=True)
 
+        logger.info(f"立方体体积数据(颜色:体积){self.volume_data}")
         return combined_mesh
 
     def show_model(self):

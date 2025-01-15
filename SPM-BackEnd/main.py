@@ -74,5 +74,6 @@ if __name__ == "__main__":
     flask_thread.start()
 
     # 启动 WebView 浏览器，访问前端页面
-    webview.create_window("SoilHydro3D", "http://localhost:5173", width=1000, height=800,frameless=True)
-    webview.start(debug=True)
+    # webview.create_window("SoilHydro3D", "http://localhost:5173", width=1000, height=800,frameless=True)
+    webview.create_window("SoilHydro3D", "web/dist/index.html", width=1000, height=800,frameless=True)
+    webview.start(debug=False)
