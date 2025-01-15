@@ -30,6 +30,7 @@ class PyvistaShow:
                 point_size=point_size,  # 设置点大小
                 render_points_as_spheres=True,
             )
+            logger.info(f"点云已加载")
             self.plotter.show()
 
         except Exception as e:
@@ -49,5 +50,6 @@ class PyvistaShow:
         else:
             self.plotter.add_mesh(mesh, show_edges=True)
 
+        logger.info(f"立方体已加载")
         # 显示窗口
         self.plotter.show()

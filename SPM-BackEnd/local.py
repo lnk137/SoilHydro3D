@@ -27,12 +27,12 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     # 文件夹路径
-    folder_path = r"img/Test/100cut"
-    output_path="model/cube.vtk"
-    layer_thickness=5
+    folder_path = r"img/Test/100"
+    output_path="model/pc.vtk"
+    layer_thickness=3
 
     image_paths, temp_folder = Pipeline.preprocess_images(folder_path)
-    Pipeline.creat_cube(image_paths, temp_folder, output_path, layer_thickness)
+    Pipeline.creat_point_cloud(image_paths, temp_folder, output_path, layer_thickness)
 
     pyvista_show = PyvistaShow()
-    pyvista_show.show_mesh_vtk(output_path)
+    pyvista_show.show_point_cloud(output_path)

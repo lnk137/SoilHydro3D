@@ -1,0 +1,32 @@
+
+html.dark {
+  --theme-color: #343844;
+  --el-select-bg-color: #343844; /* 深色模式背景色 */
+  --el-select-text-color: #C5C5C5; /* 深色模式文字颜色 */
+  --el-option-bg-color: #343844;
+  --el-option-hover-bg-color: #343844;
+}
+
+.el-select {
+  background-color: var(--el-select-bg-color) !important;
+  color: var(--el-select-text-color) !important;
+}
+
+.el-select .el-input__inner {
+  background-color: var(--el-select-bg-color) !important;
+  color: var(--el-select-text-color) !important;
+}
+
+.el-option {
+  background-color: var(--el-select-bg-color) !important;
+  color: var(--el-select-text-color) !important;
+}
+
+.el-option--hover {
+  background-color: var(--el-option-hover-bg-color) !important;
+  color: var(--el-option-text-color) !important;
+}
+
+.el-select-dropdown {
+  background-color: var(--el-select-bg-color) !important;
+}

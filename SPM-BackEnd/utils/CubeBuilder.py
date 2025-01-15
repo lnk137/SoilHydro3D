@@ -14,7 +14,7 @@ class CubeBuilder:
     建模类，用于根据图像生成三维模型，使用优化的体素网格合并。
     """
 
-    def __init__(self, side_length=1, layer_thickness=3):
+    def __init__(self, side_length=1, layer_thickness=3,target=None):
         """
         :param side_length: 每个立方体的边长，控制生成模型的分辨率和体素大小，默认为 1。
         :param layer_thickness: 每层的厚度，控制图像层的堆叠间隔，默认为 3。
@@ -22,6 +22,7 @@ class CubeBuilder:
         self.side_length = side_length
         self.layer_thickness = layer_thickness
         self.plotter = pv.Plotter()
+        self.target=target
         self.color_cubes = {}
 
     def optimize_mesh(self, mesh):
@@ -39,7 +40,7 @@ class CubeBuilder:
 
         return cleaned
 
-    def generate_surface(self, current_z, image_path,target=None):
+    def generate_surface(self, current_z, image_path):
         """
         根据单张图片生成三维表面，包含优化处理。
         :param current_z: 当前层的高度。
@@ -54,11 +55,11 @@ class CubeBuilder:
         for x, y, r, g, b, color in pixels:
             if ColorAnalyzer.is_nearly_white(color):
                 continue  # 跳过接近白色的像素
-            if target is not None:
-                if target == "preferential_flow":
+            if self.target is not None:
+                if self.target == "matrix_flow":
                     if ColorAnalyzer.is_color_in_range(color, "#0B00FB", 50):
                         continue
-                if target == "matrix_flow":
+                if self.target == "preferential_flow":
                     if ColorAnalyzer.is_color_in_range(color, "#9CFF9B", 50):
                         continue
                     elif ColorAnalyzer.is_color_in_range(color, "#0FFDFE", 50):
@@ -95,6 +96,7 @@ class CubeBuilder:
         for index, image_path in tqdm(
                 enumerate(image_paths), desc="分层建模中", unit="层", total=len(image_paths)
         ):
+            logger.info(f"分层建模中,正在处理第 {index + 1}/{len(image_paths)} 层...")
             current_z = index * self.layer_thickness
             self.generate_surface(current_z=current_z, image_path=image_path)
 

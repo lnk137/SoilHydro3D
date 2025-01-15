@@ -4,3 +4,7 @@ numpy
 pyvista
 tqdm
 matplotlib
+flask
+flask_cors
+pywebview
+pyinstaller

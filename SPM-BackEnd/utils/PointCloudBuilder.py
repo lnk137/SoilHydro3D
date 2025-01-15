@@ -13,7 +13,7 @@ class PointCloudBuilder:
     点云生成类，用于根据图像生成三维点云。
     """
 
-    def __init__(self, layer_thickness,offset=0.3):
+    def __init__(self, layer_thickness,offset=0.3,target=None):
         """
         初始化点云生成类。
 
@@ -26,8 +26,9 @@ class PointCloudBuilder:
         self.colors = []  # 存储所有点的颜色 (r, g, b)
         self.plotter = pv.Plotter()  # 负责点云的可视化
         self.volume_data = {}  # 存储每种颜色对应的体积数据
+        self.target=target
 
-    def generate_layer(self, current_z, image_path, target=None):
+    def generate_layer(self, current_z, image_path):
         """
         根据单张图片生成点云，增加点的密度，在 3x3x3 范围内生成。
 
@@ -45,11 +46,11 @@ class PointCloudBuilder:
             color = pixel[5]  # Hex颜色值
             if ColorAnalyzer.is_nearly_white(color):
                 continue  # 跳过接近白色的像素
-            if target is not None:
-                if target == "preferential_flow":
+            if self.target is not None:
+                if self.target == "matrix_flow":
                     if ColorAnalyzer.is_color_in_range(color, "#0B00FB", 50):
                         continue
-                if target == "matrix_flow":
+                if self.target == "preferential_flow":
                     if ColorAnalyzer.is_color_in_range(color, "#9CFF9B", 50):
                         continue
                     elif ColorAnalyzer.is_color_in_range(color, "#0FFDFE", 50):
@@ -79,11 +80,12 @@ class PointCloudBuilder:
         for index, image_path in tqdm(
                 enumerate(image_paths), desc="生成点云层", unit="层", total=len(image_paths), position=0
         ):
+            logger.info(f"分层建模中,正在处理第 {index + 1}/{len(image_paths)} 层...")
             # 计算当前层的高度坐标
             current_z = index * self.layer_thickness
-
             # 按照层厚度生成点云
-            self.generate_layer(current_z=current_z, image_path=image_path)
+            for i in range(current_z, current_z + self.layer_thickness):
+                self.generate_layer(current_z=i, image_path=image_path)
 
         # 转换点和颜色为 NumPy 数组
         points_array = np.array(self.points)

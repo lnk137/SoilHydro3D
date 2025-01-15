@@ -2,6 +2,7 @@ import os
 import shutil
 from pathlib import Path
 import logging
+from tkinter import filedialog, Tk
 
 logger = logging.getLogger(__name__)
 class FileManager:
@@ -42,6 +43,23 @@ class FileManager:
             logger.info(f"点云已保存为 VTP 格式: {output_path}")
         except Exception as e:
             logger.info(f"保存 VTP 文件时出错: {e}")
+
+    @staticmethod
+    def save_point_cloud_vtk(point_cloud, output_path):
+        """
+        保存点云为 XML 格式的 VTP 文件。
+
+        :param point_cloud: PyVista 的点云数据对象。
+        :type point_cloud: pv.PolyData
+        :param output_path: 保存的文件名 (.vtk)
+        :type output_path: str
+        """
+        try:
+            output_path=FileManager.change_file_extension(output_path, "vtk")
+            point_cloud.save(output_path)
+            logger.info(f"点云已保存为 VTK 格式: {output_path}")
+        except Exception as e:
+            logger.info(f"保存 VTK 文件时出错: {e}")
 
     @staticmethod
     def save_as_vtk(mesh, output_path):
@@ -217,3 +235,32 @@ class FileManager:
         base_name, _ = os.path.splitext(output_path)  # 获取不带后缀的文件名
         new_file_path = f"{base_name}.{new_extension}"  # 拼接新后缀
         return new_file_path
+
+    @staticmethod
+    def get_file_path():
+        """
+        获取文件路径
+        """
+        # 创建一个隐藏的 Tk 窗口
+        root = Tk()
+        root.withdraw()  # 隐藏主窗口
+        root.attributes("-topmost", True)  # 确保对话框在最前面
+        # 打开文件选择对话框
+        file_path = filedialog.askopenfilename()
+        # 关闭 Tk 窗口
+        root.destroy()
+        logger.info(f"选择的文件路径: {file_path}")
+        return file_path
+
+    @staticmethod
+    def get_folder_path():
+        # 创建一个隐藏的 Tk 窗口
+        root = Tk()
+        root.withdraw()  # 隐藏主窗口
+        root.attributes("-topmost", True)  # 确保对话框在最前面
+        # 打开文件夹选择对话框
+        folder_path = filedialog.askdirectory()
+        # 关闭 Tk 窗口
+        root.destroy()
+        logger.info(f"选择的文件路径: {folder_path}")
+        return folder_path

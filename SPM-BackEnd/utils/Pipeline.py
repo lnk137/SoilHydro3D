@@ -27,19 +27,19 @@ class Pipeline:
         return image_paths, temp_folder
 
     @staticmethod
-    def creat_point_cloud(image_paths, temp_folder, output_path, layer_thickness=1, offset=0.3):
+    def creat_point_cloud(image_paths, temp_folder, output_path,target ,layer_thickness=1, offset=0.3):
         """
         运行点云构建、显示及保存的完整流程。
         """
         try:
 
             # 初始化点云生成器
-            builder = PointCloudBuilder(layer_thickness, offset)
+            builder = PointCloudBuilder(layer_thickness, offset,target)
             # 构建点云
             point_cloud = builder.build_point_cloud(image_paths)
 
             # 保存点云为文件
-            FileManager.save_point_cloud_vtp(point_cloud, file_name=output_path)
+            FileManager.save_point_cloud_vtk(point_cloud, output_path)
 
         finally:
             # 删除 temp 文件夹
@@ -47,7 +47,7 @@ class Pipeline:
             logger.info("temp 文件夹已删除。")
 
     @staticmethod
-    def creat_cube(image_paths, temp_folder, output_path, layer_thickness=1):
+    def creat_cube(image_paths, temp_folder, output_path,target, layer_thickness=1):
         """
         运行立方体建模、显示及保存的完整流程。
         """

@@ -7,8 +7,17 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    CheckBox: typeof import('./src/components/CheckBox.vue')['default']
+    ElOption: typeof import('element-plus/es')['ElOption']
+    ElSelect: typeof import('element-plus/es')['ElSelect']
+    ElSlider: typeof import('element-plus/es')['ElSlider']
+    LogViewer: typeof import('./src/components/terminal/LogViewer.vue')['default']
     ModelView: typeof import('./src/components/ModelView.vue')['default']
+    ObjView: typeof import('./src/components/ObjView.vue')['default']
+    PointCloudView: typeof import('./src/components/PointCloudView.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Slider: typeof import('./src/components/set/Slider.vue')['default']
+    TopBar: typeof import('./src/components/TopBar.vue')['default']
   }
 }
