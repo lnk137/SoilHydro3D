@@ -41,15 +41,20 @@ class PyvistaShow:
         读取并显示带有 RGB 颜色的 VTK 文件。
         :param file_path: VTK 文件路径
         """
-        # 加载 VTK 文件
-        mesh = pv.read(file_path)
 
-        # 检查是否包含 RGB 颜色
-        if "RGB" in mesh.point_data:  # 假设颜色存储在点数据中，字段名为 'RGB'
-            self.plotter.add_mesh(mesh, scalars="RGB", rgb=True)
-        else:
-            self.plotter.add_mesh(mesh, show_edges=True)
+        try:
+            # 加载 VTK 文件
+            mesh = pv.read(file_path)
 
-        logger.info(f"立方体已加载")
-        # 显示窗口
-        self.plotter.show()
+            # 检查是否包含 RGB 颜色
+            if "RGB" in mesh.point_data:  # 假设颜色存储在点数据中，字段名为 'RGB'
+                self.plotter.add_mesh(mesh, scalars="RGB", rgb=True)
+            else:
+                self.plotter.add_mesh(mesh, show_edges=True)
+
+            logger.info(f"立方体已加载")
+            # 显示窗口
+            self.plotter.show()
+
+        except Exception as e:
+            logger.error(f"读取或显示立方体时出错: {e}")

@@ -18,7 +18,7 @@
                         <el-option v-for="item in options_retentate" :key="item.value" :label="item.label"
                             :value="item.value" />
                     </el-select>
-                    <el-select v-model="modelStore.type" placeholder="生成模式" size="large" style="width: 140px">
+                    <el-select v-model="modelStore.model_type" placeholder="生成模式" size="large" style="width: 140px">
                         <el-option v-for="item in options_type" :key="item.value" :label="item.label"
                             :value="item.value" />
                     </el-select>
@@ -126,7 +126,7 @@ const creat_model = async () => {
             !checkField(pathStore.file_path, '请选择图片文件夹！') ||
             !checkField(pathStore.output_path, '请选择模型保存文件夹！') ||
             !checkField(pathStore.file_name, '请输入保存文件名！') ||
-            !checkField(modelStore.type, '请选择生成模式！') ||
+            !checkField(modelStore.model_type, '请选择生成模式！') ||
             !checkField(modelStore.target, '请输入目标值！') ||
             !checkField(modelStore.layer_thickness, '请输入层厚度！')
         ) {
@@ -134,7 +134,7 @@ const creat_model = async () => {
         }
         pathStore.full_path=pathStore.output_path+"/"+pathStore.file_name
         console.log(pathStore.full_path)
-        const response = await fetch(`${urlStore.server_url}/creat/${modelStore.type}`, {
+        const response = await fetch(`${urlStore.server_url}/creat/${modelStore.model_type}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -143,6 +143,7 @@ const creat_model = async () => {
                 folder_path: pathStore.file_path,
                 output_path: pathStore.full_path,
                 target: modelStore.target,
+                model_type: modelStore.model_type,
                 layer_thickness: modelStore.layer_thickness,
             }),
         });

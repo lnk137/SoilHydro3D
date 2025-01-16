@@ -27,12 +27,13 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     # 文件夹路径
-    folder_path = r"img/Test/100"
-    output_path="model/pc.vtk"
-    layer_thickness=3
+    folder_path = r"img/Four-Color Cluster Images (Adjusted Colors)/100"
+    output_path="model/pc"
+    layer_thickness=5
 
-    image_paths, temp_folder = Pipeline.preprocess_images(folder_path)
-    Pipeline.creat_point_cloud(image_paths, temp_folder, output_path, layer_thickness)
-
+    pipline = Pipeline(folder_path=folder_path,output_path=output_path,layer_thickness=layer_thickness, target=None,model_type = "point_cloud")
+    pipline.preprocess_images()
+    pipline.create_section(5)
+    #
     pyvista_show = PyvistaShow()
-    pyvista_show.show_point_cloud(output_path)
+    pyvista_show.show_point_cloud('E:\AAAAAAAA\FrontBackEndProjects\SoilHydro3D\SH-BackEnd\model\pc_part_5.vtk')

@@ -69,11 +69,15 @@ def run_flask():
 
 
 if __name__ == "__main__":
-    # 创建并启动 Flask 线程
-    flask_thread = threading.Thread(target=run_flask, daemon=True)
-    flask_thread.start()
+    try:
+        # 创建并启动 Flask 线程
+        flask_thread = threading.Thread(target=run_flask, daemon=True)
+        flask_thread.start()
 
-    # 启动 WebView 浏览器，访问前端页面
-    # webview.create_window("SoilHydro3D", "http://localhost:5173", width=1000, height=800,frameless=True)
-    webview.create_window("SoilHydro3D", "web/dist/index.html", width=1000, height=800,frameless=True)
-    webview.start(debug=False)
+        # 启动 WebView 浏览器，访问前端页面
+        # webview.create_window("SoilHydro3D", "http://localhost:5173", width=1000, height=800,frameless=True)
+        webview.create_window("SoilHydro3D", "web/dist/index.html", width=1000, height=800, frameless=True)
+        webview.start(debug=False)
+
+    except Exception as e:
+        logger.info(f"服务器启动失败: {e}")

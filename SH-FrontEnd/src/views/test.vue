@@ -25,7 +25,7 @@ const show_model = async () => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              type: modelStore.type,
+              model_type: modelStore.model_type,
             }),
         });
         const data = await response.json();

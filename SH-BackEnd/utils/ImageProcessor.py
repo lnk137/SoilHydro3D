@@ -141,9 +141,52 @@ class ImageProcessor:
                 image_path = os.path.join(input_folder, filename)
                 process_image(image_path, target_colors)
 
+    @staticmethod
+    def divide_images_into_folders(input_folder, n):
+        """
+        将指定文件夹内的图片纵向等分成 n 份，并将每一部分保存到对应的子文件夹中。
+
+        参数：
+        - input_folder: 包含图片的文件夹路径
+        - n: 等分数量，同时也是子文件夹的数量
+        """
+        # 创建 n 个子文件夹
+        temp_folders = []
+        for i in range(1, n + 1):
+            temp_folder_path = os.path.join(input_folder, f"temp{i}")
+            os.makedirs(temp_folder_path, exist_ok=True)  # 如果文件夹不存在，则创建
+            temp_folders.append(temp_folder_path)
+
+        # 遍历输入文件夹中的所有文件
+        for filename in os.listdir(input_folder):
+            file_path = os.path.join(input_folder, filename)
+
+            # 跳过非文件项
+            if not os.path.isfile(file_path):
+                continue
+
+            # 检查文件是否为图片格式
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
+                img = cv2.imread(file_path)  # 读取图片
+                height, width = img.shape[:2]  # 获取图片的高度和宽度
+                slice_height = height // n  # 计算每一份的高度
+
+                for i in range(n):
+                    # 计算裁剪的起止坐标
+                    y_start = i * slice_height
+                    y_end = (i + 1) * slice_height if i != n - 1 else height
+
+                    # 裁剪图片
+                    cropped_img = img[y_start:y_end, :]
+
+                    # 保存裁剪后的图片到对应的子文件夹
+                    save_path = os.path.join(temp_folders[i], filename)
+                    cv2.imwrite(save_path, cropped_img)
+
+
+
 if __name__ == "__main__":
-    # 目标颜色的16进制列表
-    HEX_COLORS = ["#9CFF9B", "#0FFDFE", "#0B00FB", "#FFFFFF"]
-
-    input_folder = "../img/Four-Color Cluster Images (Original Colors)"  # 输入文件夹路径
-
+    # 示例用法
+    input_folder_path = r"E:\AAAAAAAA\FrontBackEndProjects\SoilHydro3D\SH-BackEnd\img\Test\100"  # 替换为图片文件夹路径
+    n = 5  # 将图片等分为 4 份
+    ImageProcessor.divide_images_into_folders(input_folder_path, n)

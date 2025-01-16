@@ -1,6 +1,4 @@
 from flask import Blueprint, jsonify, request
-
-
 from utils.Pipeline import Pipeline
 import logging
 creat_model_bp= Blueprint("creat_model_bp", __name__)
@@ -13,18 +11,19 @@ def get_request():
     folder_path = request.json["folder_path"]
     output_path = request.json["output_path"]
     target = request.json["target"]
+    model_type = request.json["model_type"]
     layer_thickness = int(request.json["layer_thickness"])
-    image_paths, temp_folder = Pipeline.preprocess_images(folder_path)
+    pipline = Pipeline(folder_path=folder_path,output_path=output_path,layer_thickness=layer_thickness, target=target,model_type = model_type)
+    pipline.preprocess_images()
 
-    return folder_path, layer_thickness, output_path,target,image_paths, temp_folder
+    return pipline,output_path
 
 @creat_model_bp.route("/point_cloud", methods=["POST"])
 def point_cloud():
     try:
-        folder_path, layer_thickness, output_path,target,image_paths, temp_folder= get_request()
+        pipline,output_path= get_request()
 
-        image_paths, temp_folder = Pipeline.preprocess_images(folder_path)
-        Pipeline.creat_point_cloud(image_paths, temp_folder, output_path,target,layer_thickness)
+        pipline.create_point_cloud()
 
         return jsonify({"status": "点云模型已创建"})
 
@@ -38,8 +37,9 @@ def point_cloud():
 def cube():
     try:
 
-        folder_path, layer_thickness, output_path,target,image_paths,temp_folder=get_request()
-        Pipeline.creat_cube(image_paths, temp_folder, output_path,target,layer_thickness)
+        pipline,output_path= get_request()
+
+        pipline.create_cube()
 
         return jsonify({"status": "立方体模型已创建"})
 
