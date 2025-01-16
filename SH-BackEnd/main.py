@@ -14,12 +14,12 @@ import os
 
 
 # 确保日志目录存在
-log_dir = "log"
+log_dir = "backend_log"
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
 # 清空日志文件内容
-log_path = "./log/app.log"
+log_path = "./backend_log/app.log"
 if os.path.exists(log_path):
     with open(log_path, 'w', encoding='utf-8') as f:
         f.truncate()  # 清空文件内容
@@ -58,7 +58,7 @@ app.register_blueprint(show_model_bp, url_prefix="/show")
 
 @app.route('/get_logs', methods=['GET'])
 def get_logs():
-    with open('./log/app.log', 'r', encoding='utf-8') as f:
+    with open('./backend_log/app.log', 'r', encoding='utf-8') as f:
         logs = f.readlines()
     return jsonify(logs)
 

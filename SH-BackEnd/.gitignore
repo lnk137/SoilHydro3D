@@ -1,8 +1,9 @@
 /img
 /.venv
-/__pycache__
+__pycache__
 /model
-/log
+/backend_log
 /web
 /dist
 /build
+/.idea
