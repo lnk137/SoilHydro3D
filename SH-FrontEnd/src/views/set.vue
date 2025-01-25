@@ -134,6 +134,7 @@ const creat_model = async () => {
         }
         pathStore.full_path=pathStore.output_path+"/"+pathStore.file_name
         console.log(pathStore.full_path)
+        alert('开始生成模型');
         const response = await fetch(`${urlStore.server_url}/creat/${modelStore.model_type}`, {
             method: 'POST',
             headers: {
@@ -147,6 +148,7 @@ const creat_model = async () => {
                 layer_thickness: modelStore.layer_thickness,
             }),
         });
+
         const data = await response.json();
         console.log('生成模型结果', data);
 
