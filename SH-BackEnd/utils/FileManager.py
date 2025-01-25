@@ -2,7 +2,9 @@ import os
 import shutil
 from pathlib import Path
 import logging
-from tkinter import filedialog, Tk
+
+from utils import config
+import webview
 
 logger = logging.getLogger(__name__)
 class FileManager:
@@ -241,26 +243,24 @@ class FileManager:
         """
         获取文件路径
         """
-        # 创建一个隐藏的 Tk 窗口
-        root = Tk()
-        root.withdraw()  # 隐藏主窗口
-        root.attributes("-topmost", True)  # 确保对话框在最前面
-        # 打开文件选择对话框
-        file_path = filedialog.askopenfilename()
-        # 关闭 Tk 窗口
-        root.destroy()
+
+        window=config.window
+        # 允许选择 .vtk 文件类型
+        file_path = window.create_file_dialog(
+            webview.OPEN_DIALOG,  # 打开文件选择对话框
+            directory='/',
+            allow_multiple=False
+        )
+        file_path = file_path[0]
         logger.info(f"选择的文件路径: {file_path}")
         return file_path
 
     @staticmethod
     def get_folder_path():
-        # 创建一个隐藏的 Tk 窗口
-        root = Tk()
-        root.withdraw()  # 隐藏主窗口
-        root.attributes("-topmost", True)  # 确保对话框在最前面
-        # 打开文件夹选择对话框
-        folder_path = filedialog.askdirectory()
-        # 关闭 Tk 窗口
-        root.destroy()
+        window=config.window
+        folder_path = window.create_file_dialog(
+            webview.FOLDER_DIALOG, directory='/',allow_multiple = False
+        )
+        folder_path = folder_path[0]
         logger.info(f"选择的文件路径: {folder_path}")
         return folder_path

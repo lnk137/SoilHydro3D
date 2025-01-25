@@ -3,7 +3,6 @@
 __pycache__
 /model
 /backend_log
-/web
 /dist
 /build
 /.idea

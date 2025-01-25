@@ -5,8 +5,10 @@ from flask_cors import CORS
 
 from blueprints.creat_model_bp import creat_model_bp
 from blueprints.file_bp import file_bp
-from blueprints.top_bp import top_bp
+from blueprints.top_bp import top_bp, window
 from blueprints.show_model_bp import show_model_bp
+
+from utils import config
 
 from logging import Filter
 import logging
@@ -76,9 +78,8 @@ if __name__ == "__main__":
         webview.DRAG_REGION_SELECTOR = '.top-bar'
         # 启动 WebView 浏览器，访问前端页面
         # webview.create_window("SoilHydro3D", "http://localhost:5173", width=1000, height=800,frameless=True)
-
-        webview.create_window("SoilHydro3D", "web/dist/index.html", width=1000, height=800, frameless=True)
-        webview.start(debug=True)
+        config.window = webview.create_window("SoilHydro3D", "web/dist/index.html", width=1000, height=800, frameless=True)
+        webview.start()
 
     except Exception as e:
         logger.info(f"服务器启动失败: {e}")
